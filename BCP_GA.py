@@ -68,7 +68,8 @@ def predictive_model(X, y):
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=7)
 
-    rfc = GradientBoostingClassifier(random_state=0)
+    # rfc = GradientBoostingClassifier(random_state=0)
+    rfc = RandomForestClassifier(n_estimators=100,  random_state=42)
     rfc.fit(X_train, y_train)
     return accuracy_score(y_test, rfc.predict(X_test))
 
