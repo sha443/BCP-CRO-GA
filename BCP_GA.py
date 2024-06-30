@@ -3,17 +3,21 @@ import numpy as np
 import pandas as pd
 from sklearn import svm
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report, roc_curve, roc_auc_score, confusion_matrix, ConfusionMatrixDisplay, precision_recall_curve, average_precision_score
+from sklearn.preprocessing import label_binarize
+import matplotlib.pyplot as plt
+
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from xgboost import XGBClassifier
+from sklearn.preprocessing import MinMaxScaler
 
 # Read Dataset
 WBC_DATASET = "WBC.Cleaned.csv"
 BCC_DATASET = "BCC.Cleaned.csv"
 BCUCI_DATASET = "BCUCI.Cleaned.csv"
 
-df = pd.read_csv(BCC_DATASET)
+df = pd.read_csv(WBC_DATASET)
 
 # d = {'M': 0, 'B': 1}
 # df['target'] = df['target'].map(d)
@@ -28,6 +32,11 @@ X = df.loc[:, df.columns != target]
 y = df.loc[:, target]
 # Print list of features and target variable names
 print('Feature List\n', feature_list, '\n\nTarget = ', target)
+
+# normalize data
+scaler = MinMaxScaler()
+X = scaler.fit_transform(X)
+# print(X[:5])
 
 
 def init_population(n, c):
@@ -83,8 +92,9 @@ def GA(data, feature_list, target, n, max_iter):
     for i in range(max_iter):
         print('Iteration: ', i)
         population = random_selection(population)
-        population = single_point_crossover(population)
-        if np.random.rand() < 0.3:
+        if np.random.rand() < 0.8:
+            population = single_point_crossover(population)
+        if np.random.rand() < 0.1:
             population = flip_mutation(population)
             fitness = get_fitness(data, feature_list, target, population)
         if max(fitness) > optimal_value:
@@ -95,7 +105,7 @@ def GA(data, feature_list, target, n, max_iter):
 
 
 # Execute Genetic Algorithm to obtain Important Feature
-iterations = 1000
+iterations = 10
 feature_set, acc_score = GA(df, feature_list, target, 20, iterations)
 # Filter Selected Features
 feature_set = [feature_list[i]
@@ -103,23 +113,109 @@ feature_set = [feature_list[i]
 # Print List of Features
 print('Optimal Feature Set\n', feature_set,
       '\nOptimal Accuracy =', round(acc_score * 100), '%')
+
+
+# keep optimal features
+print('Feature Set:', feature_set)
+# print('DataFrame Columns:', X.columns)
+X_optimal = df.loc[:, np.isin(df.columns, feature_set)]
+# print(X_optimal)
+
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=7)
+    X_optimal, y, test_size=0.2, random_state=7)
+print("X_train", X_train.shape)
+# model = GradientBoostingClassifier(random_state=0)
+# model = DecisionTreeClassifier(criterion="entropy", max_depth=33)
+# model = XGBClassifier(max_depth=3,  scale_pos_weight=1)
+# model = RandomForestClassifier(n_estimators=100)
+model = svm.SVC(kernel='linear', C=1000)
+history = model.fit(X_train, y_train)
 
-# cf = GradientBoostingClassifier(random_state=0)
-# cf = DecisionTreeClassifier(criterion="entropy", max_depth=33)
-# cf = XGBClassifier(max_depth = 3,  scale_pos_weight=1)
-# cf = RandomForestClassifier(n_estimators=100)
-cf = svm.SVC(kernel='linear', C=1000)
-cf.fit(X_train, y_train)
+predictions = model.predict(X_test)
 
 
-predictions = cf.predict(X_test)
-cf_pred = cf.predict(X_test)
-cf_score = accuracy_score(y_test, cf_pred)
-precission_cf = precision_score(y_test, cf_pred)
-recall_cf = recall_score(y_test, cf_pred)
-f1_cf = f1_score(y_test, cf_pred)
-print("Precission : ", precission_cf)
-print("Recall : ", recall_cf)
-print("F1 : ", f1_cf)
+# Calculate accuracy
+accuracy = accuracy_score(y_test, predictions)
+print(f"Accuracy: {accuracy}")
+
+# Calculate precision
+precision = precision_score(y_test, predictions, average='weighted')
+print(f"Precision: {precision}")
+
+# Calculate recall
+recall = recall_score(y_test, predictions, average='weighted')
+print(f"Recall: {recall}")
+
+# Calculate F1 score
+f1 = f1_score(y_test, predictions, average='weighted')
+print(f"F1 Score: {f1}")
+
+# Generate confusion matrix
+conf_matrix = confusion_matrix(y_test, predictions)
+print("Confusion Matrix:")
+print(conf_matrix)
+
+# Generate classification report
+class_report = classification_report(y_test, predictions)
+print("Classification Report:")
+print(class_report)
+
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, predictions)
+disp = ConfusionMatrixDisplay(confusion_matrix=conf_matrix)
+disp.plot(cmap=plt.cm.Blues)
+plt.title('Confusion Matrix')
+plt.show()
+
+# ROC Curve and AUC
+# Binarize the output labels if it's a multi-class classification problem
+# Replace with the actual classes
+y_test_binarized = label_binarize(y_test, classes=[0, 1])
+predictions_binarized = label_binarize(
+    predictions, classes=[0, 1])
+
+# Compute ROC curve and ROC area for each class
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+for i in range(y_test_binarized.shape[1]):
+    fpr[i], tpr[i], _ = roc_curve(
+        y_test_binarized[:, i], predictions_binarized[:, i])
+    roc_auc[i] = roc_auc_score(
+        y_test_binarized[:, i], predictions_binarized[:, i])
+
+
+# Compute Precision-Recall curve and average precision score for each class
+precision = dict()
+recall = dict()
+average_precision = dict()
+for i in range(y_test_binarized.shape[1]):
+    precision[i], recall[i], _ = precision_recall_curve(
+        y_test_binarized[:, i], predictions_binarized[:, i])
+    average_precision[i] = average_precision_score(
+        y_test_binarized[:, i], predictions_binarized[:, i])
+
+# Plot Precision-Recall curve
+plt.figure()
+for i in range(y_test_binarized.shape[1]):
+    plt.plot(recall[i], precision[i],
+             label=f'Class {i} (AP = {average_precision[i]:.2f})')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('Precision-Recall Curve')
+plt.legend(loc="best")
+plt.show()
+
+# Plot ROC curve
+plt.figure()
+for i in range(y_test_binarized.shape[1]):
+    plt.plot(fpr[i], tpr[i], label=f'Class {i} (area = {roc_auc[i]:.2f})')
+plt.plot([0, 1], [0, 1], 'k--')  # Diagonal line
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic (ROC) Curve')
+plt.legend(loc="lower right")
+plt.show()

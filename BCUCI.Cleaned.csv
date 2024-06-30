@@ -1,4 +1,4 @@
-Outcome,Age,me0pause,tumor_size,inv_0des,0de_caps,deg_malig,breast,breast_quad,irradiat
+Outcome,Age,menopause,tumor_size,inv_ndes,node_caps,deg_malig,breast,breast_quad,irradiat
 0,2,2,6,0,0,3,0,1,0
 0,3,2,4,0,0,2,1,2,0
 0,3,2,4,0,0,2,0,1,0

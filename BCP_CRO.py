@@ -2,10 +2,6 @@ import random
 import pandas
 import numpy as np
 from sklearn import tree
-import pydotplus
-from sklearn.tree import DecisionTreeClassifier
-import matplotlib.pyplot as plt
-import matplotlib.image as pltimg
 from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
 from sklearn import svm
@@ -14,16 +10,10 @@ from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import KFold
 from sklearn import model_selection
 from sklearn.ensemble import RandomForestClassifier
-from sklearn import metrics
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import f1_score
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix, classification_report
 
 import pandas as pd
-from sklearn.metrics import classification_report
 from sklearn.preprocessing import StandardScaler
 import seaborn as sns
 import xgboost as xgb
@@ -253,8 +243,9 @@ def CRO_iterations(self):
     count_inter = 0
     count_onwall = 0
     count_synt = 0
+    maxItr = 20
 
-    while terminate < 301:
+    while terminate <= maxItr:
         # Condition For CRO Termination
         t = random.uniform(0, 1)
         # Decides whether to perform unimoleculat or inter molecular reaction
