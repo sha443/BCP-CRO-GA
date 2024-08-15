@@ -13,9 +13,9 @@ from xgboost import XGBClassifier
 from sklearn.preprocessing import MinMaxScaler
 
 # Read Dataset
-WBC_DATASET = "WBC.Cleaned.csv"
-BCC_DATASET = "BCC.Cleaned.csv"
-BCUCI_DATASET = "BCUCI.Cleaned.csv"
+WBC_DATASET = "data/WBC.Cleaned.csv"
+BCC_DATASET = "data/BCC.Cleaned.csv"
+BCUCI_DATASET = "data/BCUCI.Cleaned.csv"
 
 df = pd.read_csv(WBC_DATASET)
 

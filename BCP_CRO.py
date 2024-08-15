@@ -114,9 +114,9 @@ def read_data(self):
     copy_molecules.clear()
     copy_molecules = molecule.copy()
 
-    WBC_DATASET = "WBC.Cleaned.csv"
-    BCC_DATASET = "BCC.Cleaned.csv"
-    BCUCI_DATASET = "BCUCI.Cleaned.csv"
+    WBC_DATASET = "data/WBC.Cleaned.csv"
+    BCC_DATASET = "data/BCC.Cleaned.csv"
+    BCUCI_DATASET = "data/BCUCI.Cleaned.csv"
 
     df = pandas.read_csv("file:"+BCUCI_DATASET, header=0)
     # df.head()
